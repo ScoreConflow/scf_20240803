@@ -1,0 +1,546 @@
+#If you don't need to read the instructions for each configuration, you can use the conf.txt in the upper two folders
+#It is recommended to record the SCF version number here. SCF Version:20240803
+
+[PROJECT CONFIG]
+# Model name
+# Required
+model_name =
+
+
+#Relative or absolute path to the workspace
+# cannot be None
+# Default: . In the same folder as the currently running script
+work_space = .
+
+
+# Number of CPU cores used
+# If no_cores>1, the multi-process version will be automatically used to create a process pool with a capacity of no_cores
+# no_cores=1, no process pool will be created, and the single-process version will be used automatically
+# no_cores<0, the number of cores actually used by ScoreConflow = number of cpu cores - no_cores, the user can reserve some computing resources for the system to do things other than ScoreConflow
+# None: All CPU cores
+# You can exceed the number of CPU cores on the host, but it is not recommended as it will affect the efficiency of ScoreConflow.
+# Modules that support multi-process are: calculating equal frequency binning, monotonicity suggestion, calculating optimal binning, WOE value conversion, bidirectional stepwise regression, batch output prediction value
+# Default -1: Actual no_cores used = number of cpu cores - 1
+no_cores = -1
+
+
+[DATA CONFIG]
+# The folder used to store modeling data. The training set and test set will be placed here
+# Required
+# ScoreConflow will automatically read all the files under this file, and use the dataset corresponding to ${train_data_name} as the training set and all other datasets as the test set.
+# The model performance indicators of all data sets in this folder will be listed in the "Model Performance" sheet of the model report
+model_data_file_path =
+
+
+# When filtering features, the location used to store the PSI dataset
+# Default is None: no PSI file is required
+# The model performance indicators of all data sets with Y in this folder will be listed in the "Model Performance" sheet of the model report
+psi_data_file_path = None
+
+
+# Files used to calculate OOT performance indicators need to be placed in this folder
+# Default is None: no OOT file is required
+# The model performance indicators of all data sets in this folder will be listed in the "Model Performance" sheet of the model report
+oot_data_file_path = None
+
+
+# If you need to observe the model performance indicators on data sets other than ${model_data_file_path}, ${psi_data_file_path}, and ${oot_data_file_path}, put them in this folder.
+# Default is None: no need to observe model indicators on other data
+# Scenario example: When modeling, the data of all products is used for modeling, but the model performance on each product needs to be observed.
+# The model performance indicators of all data sets in this folder will be listed in the "Model Performance" sheet of the model report
+performance_data_file_path = None
+
+# Note: Placing data in different folders allows users to manage data in a more organized manner and avoids memory confusion caused by the passage of time when tracing back.
+# Although users can put all data under <model_data_file_path>, it is not recommended.
+# Even if the data is placed in different folders, the names of the data set files cannot be the same. Because when the report is output to Excel, the name cannot be too long, so only the name of the data set file is displayed, and the folder name is not displayed. There are also some parameter configurations later. In order to keep the configuration file short, the file will only be referenced by the file name when referencing it.
+# When writing a relative path, the relative path is the location where the current script is running. It is not the location of the configuration file, nor the location of ScoreConflow. Use an absolute path when configuring the path as much as possible.
+
+
+# The file name of the dataset used for modeling placed in model_data_file_path
+# Default is train
+# cannot be None
+train_data_name = train
+
+
+# Target column name in the dataset
+# cannot be None
+# Default is y
+y = y
+
+
+# The meaning of the target tag value
+# event means the event the user is interested in has occurred, unevent means the event the user is interested in has not occurred.
+# cannot be None
+# Default: {"event":1,"unevent":0}
+y_label = {"event":1,"unevent":0}
+
+
+# The column name of the sample weights. This column will not be used as a modeling variable.
+# None: no weight
+# Default: None
+sample_weight_col = None
+
+
+# In addition to sample_weight_col, y, fit_weight_col, measure_weight_col, y_stat_group_cols, if there are other variables that do not participate in modeling, configure them here
+# ex. x1,x2
+# None: No variables need to be excluded
+# Default: None
+# The excluded field is not a feature. Note the difference between excluding a field and manually deleting a feature.
+exclude_cols = None
+
+
+# The range of special values for each variable
+# ex. {"x1":["{-9997}","{-9999,-9998}"],"x2":["{None}"]} or file://xx/xx.json read from the file
+# "{... , ...}" will not be parsed as a set, but will be processed as a string. {} in special values represents a discrete value space symbol.
+# Let's explain the meaning of the expression with examples:
+# "{-9997}": When the variable value is -9997, a special meaning occurs. For example, the number of court executions, -9997 may mean that the ID card is not in the citizen information database, rather than being executed -9997 times. Through this example, users can clearly feel the difference in meaning between -9997 and the values 0, 1, and 2.
+# "{-9998,-9999}": When the variable value is -9998 or -9999, a special meaning occurs. Although the two meanings are different, for the business modeled this time, the two meanings can be regarded as the same meaning and processed according to the same business logic. For example, when collecting data, the data that was not collected due to Party A's reasons is marked as -9998, and the data that was not collected due to Party B's reasons is marked as -9999. However, for the business, these two values mean that the data is randomly missing, so they are both processed according to the logic of random missing. In this way, the value convention of the original data can be retained for backtracking, and the user can be exempted from the work of writing additional code when processing data.
+# {None} is a special value of null, which means: a special value with null value. The reason why {None} is used instead of {miss} is that the mechanism for generating null values is sometimes different from the mechanism for generating missing values. Missing values represent that the sample points are not collected due to some uncontrollable reasons during the sampling process, resulting in missing data information, such as network disconnection during data transmission and data not being collected due to equipment failure. This is a random missing. In addition to random missing, null values may also be caused by non-information missing, such as no loan record, no need for a certain examination due to health reasons, and the temperature is too low for the equipment to collect, etc. The null value itself is information. Do not mix null values with information and random missing null values into one special value.
+# ex. {"x1":"{None,-9997}"} It means that after analyzing the business, null value and -9997 can be processed in the same way for this modeling.
+# If a variable is not configured with an empty special value, but the variable contains an empty value, a {None} group will be automatically generated to contain the empty value of the variable.
+# If spec_value = None is set, it means that there is no special value setting. It does not mean that the special value is set to {None}. Please note the difference in meaning between None and {None}
+# Default: None
+spec_value = None
+
+
+# If the variable is not configured in spec_value, its default special value
+# Usually this configuration is convenient when the data has global public special values
+# ex. ["{-9997}","{None}","{-9998,-9996}"]
+# You can use a simple way of writing: ["{-9997}","{-9999}"] can be written as {-9997},{-9999}
+# However, if there are special values for business mergers, they cannot be abbreviated. ["{-9997}","{-9999}","{-9998,-9996}"] cannot be written as {-9997},{-9999},{-9998,-9996}
+# None, no default special value
+# Default: None
+default_spec_value = None
+
+
+[CATE DATA CONFIG]
+# List the ordered categorical variables here and give the order of each value in the variable. If the value order is set to None, the lexicographic order of the characters is used as the order
+# For ordered variables, adjacent nominal sequences can only appear in the same bin or at the beginning and end of adjacent bins
+# If the nominal order is inconsistent with the event rate order, you can decide whether to configure the variable as an ordered variable based on the business situation.
+# ScoreConflow supports global optimal binning for ordered variables
+# ex. {"x1":["v1","v2"],"x2":["v3","**","v4"],"x3":None}
+# If all variables are in lexicographic order, they can be abbreviated to a list. For example, {"x1":None,"x2":None} can be abbreviated to x1,x2
+# All categories that do not appear in the configuration (excluding special values) are collectively called wildcard categories, represented by **. When the lexicographic order is used as the order, there is no wildcard category
+# None: a variable with no ordered categories in the variable
+# Default: None
+order_cate_vars = None
+
+
+# List unordered categorical variables here. Unordered categories will be sorted according to event rates.
+# Configure a threshold for each variable, and merge the categories with a distribution ratio less than the threshold into the wildcard category. If the threshold of a variable is None, the category with a frequency of too small for the variable will not be wildcarded.
+# ex1. {"x1":0.01,"x2":None}
+# ex2. x1,x2 This configuration method is equivalent to {"x1":None,"x2":None}
+# ScoreConflow supports global optimal binning for unordered variables
+# In other data sets, it is possible to see values that are not covered in the training set, and these categories are also put into the wildcard category.
+# None: There is no unordered categorical variable in the variable
+# Default: None
+unorder_cate_vars = None
+
+
+# When a category variable does not have a wildcard and an uncovered category appears, the specified processing methods include:
+# L: Considered equal to the lowest category in the order
+# H: Considered equal to the highest order category
+# M: Considered equal to the middle category of the sequence (take the larger value when even)
+# m: Considered equal to the middle category of the sequence (take the smaller value when even)
+# ex. {"x1":"H","x2":"m"}
+# None: No processing is performed on uncovered categories that appear in the variable
+# Default: None
+no_wild_treat=None
+
+
+# When a variable does not have a wildcard and is not configured in no_wild_treat, the default treatment for uncovered categories
+default_no_wild_treat=M
+
+#Note: Since , and None (case sensitive) are keywords of the Bins module, these two words cannot appear in categorical variables.
+
+
+[BINS CONFIG]
+# Number of boxes for equal frequency binning
+# Default 20
+freqBin_cnt = 20
+
+
+# If True, the monotonicity of each variable suggestion will be calculated after fore_filter. If False, no monotonicity suggestion will be made.
+# There are four recommended values for monotonicity:
+# L+: linear monotonically increasing, the larger the variable value, the higher the event rate
+# L-: Linear monotonically decreasing, the larger the variable value, the lower the event rate
+# Uu: U-shaped concave
+# Un: U-shaped convex shape (inverted U-shaped)
+# Note: Unlike setting mono to A, advised_mono is just a suggestion and displays the suggestion in the report. Setting mono to A bins the variable according to the suggestion
+# Unordered categorical variables do not need to give the recommended monotonicity constraints, because the encoding of unordered categories is calculated using event rates
+# Default is True
+mono_suggest = True
+
+
+# Monotonicity constraints on variables
+# Value range:
+# N: IV value is the highest globally, no constraints
+# A: According to all the data in model_data_file_path, automatically select a constraint from L+, L-, Uu, Un. And under this constraint, the IV value is the highest globally.
+# L: The IV value is globally the highest under linear monotone constraints (automatically determines L+, L-)
+# L+: The IV value is the highest globally under the linear monotonically increasing constraint
+# L-: The IV value is globally the highest under the linear monotonically decreasing constraint
+# U: The IV value is the highest globally under the U-type constraint (automatically determines Uu, Un)
+# ex. {"x1":"L","x2":"N"} or file://xx/xx.json read from the file
+# Default: N
+mono=N
+
+
+# Variables not appearing in mono have default monotonicity
+# Default N
+# cannot be None
+default_mono=N
+
+
+# Configure the minimum distribution ratio of bins for each variable
+# ex. {"x1":0.05,"x2":0.01} or file://xx/xx.json read from the file
+# None: Do not set the minimum distribution ratio for the variable
+# Default: None
+# Note: Setting the minimum distribution ratio of a bin is not necessary for finding the global optimal split point, but is determined by the user's confidence in the stability of the bin. If there are few sample points in a bin, the random fluctuation of its event rate may be relatively large, resulting in larger fluctuations in Woe and the final model.
+distr_min = None
+
+
+# The default minimum distribution ratio for variables that do not appear in distr_min
+# Default: 0.02
+default_distr_min=0.02
+
+
+# The event rate between any two adjacent bins cannot be less than rate_gain_min
+# Some software packages often use information gain or chi-square value to suppress the formation of bins with too small differences
+# However, these parameters do not give users a concrete and intuitive concept, and it is impossible to deduce how small the difference is.
+# ScoreConflow uses the event rate as an intuitive indicator to suppress the formation of bins with too small differences
+# ex. {"x1":0.005,"x2":0.001} or file://xx/xx.json read from the file
+# None: Do not set a minimum binning difference for the variable
+# Default: None
+rate_gain_min=None
+
+
+# Variables that do not appear in rate_gain_min default to the minimum difference in event rates between any two adjacent binning intervals
+# Default: 0.001
+default_rate_gain_min=0.001
+
+
+# Maximum number of bins for the variable. Bins for special values are not counted. If special values are merged into normal value bins due to merging rules, the merged bins are normal bins.
+# ex. {"x1":5,"x2":8} or file://xx/xx.json read from the file
+# Because ScoreConflow can specify the monotonicity of variables, the minimum bin ratio, and the minimum difference in event rates, these parameters can automatically adjust the number of bins (usually the better the variable effect and the more evenly distributed it is, the more bins there are, and vice versa), so usually this parameter can be set to None.
+# If a variable is evenly distributed and has a strong order, the number of bins may be very large. Although this is in line with the actual situation, the user can also specify the maximum number of bins allowed for certain business considerations.
+# None: Do not set the maximum number of bins for the variable
+# Default: None
+bin_cnt_max = None
+
+
+# The default maximum number of bins for variables that do not appear in bin_cnt_max
+# Default: None
+default_bin_cnt_max = None
+
+
+# If the distribution ratio of a special value bin is less than the value specified by spec_distr_min, the special value bin will be merged with other bins. For specific merging rules, see the spec_comb_policy setting.
+# If it is a nested dict, specify the minimum proportion for each special value of each variable separately.
+# If dict, use the same minimum distribution percentage for all special values of each variable.
+# ex. {"x1":{"{-9997}":0.01,"{-9999,-9998}":0.05},"x2":0.01} or file://xx/xx.json read from the file.
+# None: Do not set the minimum percentage of special value distribution
+# Default: None
+spec_distr_min=None
+
+
+# If the special value of the variable is not configured in spec_distr_min, the default minimum distribution ratio of the special value
+# If it is a dict, a default minimum distribution ratio is specified for each special value
+# If it is float, the default minimum distribution ratio of all special values is this value. You can follow default_distr_min or specify a ratio
+# ex1. {"-9999":0.02,"-9998":0.01}
+# ex2. 0.05
+# None: Do not set the default value of the minimum percentage of special value distribution
+# Default: follow ${default_distr_min}
+default_spec_distr_min=${default_distr_min}
+
+
+# When the special value ratio of a variable is less than the threshold specified by ${spec_distr_min}, the merge strategy to be adopted can be:
+# A:auto finds the closest eventProb among all values
+# a:auto only finds the closest eventProb among non-special values
+# F:first merges with the first bin of non-special values
+# L:last merges with the last bin of non-special values
+# M:median merges with the middle bin of non-special values (if there are an even number of bins, merge with the bin with the high event rate)
+# m:median merges with the middle bin of non-special values (if there are an even number of bins, merge with the bin with a low event rate)
+# B: merge the bin with the largest max_Probability and eventProb
+# S:min_Probability merges with the bin with the smallest eventProb
+# N: Do not merge
+# If it is a nested dict, specify a merge strategy for each special value of the variable. If there is a special value that is not covered, take ${default_spec_comb_policy}.
+# If it is a dict, all special values of the variable use the merging strategy corresponding to the character
+# ex. spec_comb_policy={"x1":{"{-9997}":"F","{-9998,None}":"L"},"x2":"N"}
+# If None, it is equivalent to all special values of all variables being "N" (except those that can be overwritten by ${default_spec_comb_policy})
+# Default: None
+# Note: The meaning of special value writing is explained through an example. The meaning of ["{-9997}","{-9998,-9999}"] is: there are three special values -9997, -9998, -9999 in the variable. According to the business meaning, they are divided into two business groups "{-9997}","{-9998,-9999}". -9997 itself becomes a business group, -9998,-9999 form a business group. Because the two business groups "{-9997}","{-9998,-9999}" meet the special value merging rules set during binning, they are forcibly merged together at the data level to form a bin ["{-9997}","{-9998,-9999}"]. This kind of merging is different from merging -9998, -9999 into a business group. The merging mentioned in the business group is at the business level and is determined by understanding the business. The merging of ["{-9997}","{-9998,-9999}"] is at the data level and is determined only by calculating the event rate. The process and meaning behind how the three special values -9997, -9998, -9999 become two special value business groups "{-9997}","{-9998,-9999}" and finally become a special value merged bin ["{-9997}","{-9998,-9999}"] must be clear. This special value processing method is in line with statistical principles.
+spec_comb_policy=None
+
+
+# When ${spec_comb_policy} does not contain a variable or a special value of a variable, the default special value merging strategy
+# If it is a dict, a default strategy is specified for each special value.
+# If it is str, all special values default to this strategy
+# ex1. {"-9999":"A","-9998":"B"}
+# ex2. M
+# For the value range, see ${spec_comb_policy}
+# Default: N
+# cannot be None
+default_spec_comb_policy = N
+
+
+# User-defined binning has higher priority than other binning settings.
+# When used in conjunction with redo_bins_cols, it can help users easily update custom bins.
+# ex. {"x1": ["[1.0,4.0)","[4.0,9.0)","[9.0,9.0]","{-997}","{-999,-888}","{-1000,None}"] } Or file://xx/xx.json Read from the file
+# None: No custom binning
+# Default: None
+cust_bins=None
+
+
+# Note: The equal-frequency binning and optimal binning of ScoreConflow are closed to the maximum and minimum values, for example: ["[1.0,4.0)","[4.0,8.0)","[8.0,9.0]","{-997}","{-998}"].
+# The variable corresponding to this bin is composed of a minimum value of 1, a maximum value of 9, and two special values of -997 and -998.
+# If you are like most software packages on the market, in order to include all uncovered values, you will usually change the binning to ["[-inf,4.0)","[4.0,8.0)","[8.0,inf]","{-997}","{-998}"],
+# A potential problem at this point is that when the user is exploring the data or reading the data dictionary, -998 may not be found, and the bins may be mistakenly divided into ["[-inf,4.0)","[4.0,8.0)","[8.0,inf]","{-997}"] (a special value of -998 is not configured).
+# Then -998, which is a special value, will be put into the first normal bin, and it is very difficult for users to find this problem when checking the bins.
+# Especially when there are tens of thousands of variables, it is impossible to perform detailed analysis of all the variables by human power, which increases the possibility of such errors.
+# One of the original intentions of ScoreConflow design is to help users analyze data accurately and quickly when faced with thousands of variables, and to expose statistical inconsistencies as early as possible.
+# According to the design of ScoreConflow, the bins at this time are ["[-998,4.0)","[4.0,8.0)","[8.0,9.0]","{-997}"]. Users can easily find that this variable is not configured with a special value.
+# When in use, if the online value of the variable has extreme values that are not covered during modeling, such as 0 and 10, 0 and 10 will be automatically matched to the first and last bins.
+# Then, according to the user's configuration, the binning can remain unchanged, that is, ["[1.0,4.0)","[4.0,8.0)","[8.0,9.0]","{-997}","{-998}"],
+# You can also update the bins to ["[0.0,4.0)","[4.0,8.0)","[8.0,10.0]","{-997}","{-998}"]. In this way, ScoreConflow solves the contradiction between the lack of special values and the lack of modeling extreme values.
+
+
+[MODIFY BINS CONFIG]
+# By manually calling the redo_bins method of the CardFlow instance, the variables contained in redo_bins_cols are re-binned according to the configuration in ${BINS CONFIG}, while other variables will not be executed again.
+# The significance of this method is that when the user wants to adjust the binning of individual variables according to business understanding, he only needs to configure the variables to be adjusted here. Then call scf.redo_bins(). ScoreConflow will automatically update train_optbins, bins_stat, woes of these variables and update the saved breakpoints.
+# This design can restore the process of building the scorecard to the greatest extent, including the user's own customized changes will also be recorded in the configuration file.
+# ex. x1,x2
+# ["x1","x2",...] can be abbreviated to x1,x2
+# None: All variables are executed
+# Note: The user needs to manually call the redo_bins method, and cannot update the bins through one-click process modeling.
+redo_bins_cols=None
+
+
+# opt: only update the optimal binning
+# freq: only update equal frequency bins
+# freq,opt: Update optimal and equal frequency binning
+redo_type = freq,opt
+
+
+[FILTER CONFIG]
+# Variable filtering, key is the name of the filter, the name cannot be arbitrary, there must be a corresponding filter. value is the threshold of the filter.
+# The selection results and intermediate processes will be recorded in the "Variable Selection" of the model report
+# ScoreConflow has 6 built-in filters:
+# 1. big_homogeneity: After optimal binning or custom binning, if the proportion of a certain group of the variable is higher than the threshold, the variable is filtered out. If the user sets multiple data sets, the maximum value of the variable in all data is compared with the threshold.
+# 2. small_iv: Calculate the iv value after optimal binning or custom binning. If the iv value is less than the threshold, filter out this variable. If the user sets multiple data sets, take the minimum value and compare it with the threshold. When multiple iv values are calculated, the binning nodes are fixed, which are all calculated according to the optimal binning node or custom binning node calculated by ${DATA CONFIG:train_data_name}.
+# 3. big_ivCoV: Calculate multiple iv values using the same binning node (optimal binning node calculated by ${DATA CONFIG:train_data_name} or custom binning node) for multiple data sets specified by the user, and then calculate the coefficient of variation between the multiple iv values. If it is greater than the threshold, it means that the randomness of the variable effect exceeds the user's acceptable range, and this variable is filtered out.
+# 4. big_corr: If the correlation coefficient between two variables is greater than the threshold, delete the variable with the smaller iv value. Repeat this process until the correlation coefficient between any two variables is less than the specified threshold. Correlation coefficient filtering will not delete other variables because of the variables in user_del. It will not delete variables in user_save and user_set because of other variables. It can only delete variables with high correlation with user-retained variables, regardless of the size of iv. Note: The screening result of this filter may not be optimal for the final model, because the contribution of a small iv to the final model is not necessarily less than that of a large iv. Therefore, it can be left unset here, or a higher threshold can be set, and then ${MODEL CONFIG:corr_max} can be used to filter variables with high correlation coefficients more strictly. Mixing the filtering correlation coefficient with the modeling process will have a better effect than filtering the correlation coefficient first and then modeling. The reason why the big_corr filter is built-in is that the calculation of filtering variables by correlation coefficient in a two-way regression model is more time-consuming and not as fast as big_corr. Often, during the variable derivation process, there will be a large number of variables with particularly high correlation coefficients. In this case, it is recommended to first use big_corr to set a high threshold to filter the variables once, and then use ${MODEL CONFIG:corr_max} to further filter the variables. If the number of variables is not particularly large, you can skip this filter and directly use the ${MODEL CONFIG:corr_max} parameter to limit the size of the correlation coefficient between variables.
+# 5. big_psi: Calculate the psi value between each variable in the specified data set. If the maximum psi value exceeds the threshold, filter out this variable.
+# 6. big_miss: The sample points with None or isna()==True in the sample are identified as miss, and the miss ratio of each variable is calculated. If the ratio is greater than the threshold, the variable is filtered out. If the user sets multiple data sets, the maximum value is compared with the threshold. This filter should be used with caution to ensure that the values of None or isna()==True in the sample are caused by random missing without any information, rather than expressing a state with a certain meaning. Users need to correctly understand the null values in the data and know their true meanings, and configure the big_miss filter under the premise of ensuring these.
+# ex. filters = {"big_homogeneity":0.99,"small_iv":0.02,"big_ivCoV":0.3,"big_corr":0.8,"big_psi":0.2}
+# None does not use any filter to filter variables
+#Default: {"big_homogeneity":0.99,"small_iv":0.02,"big_ivCoV":0.3,"big_corr":0.8,"big_psi":0.2}
+filters = {"big_homogeneity":0.99,"small_iv":0.02,"big_ivCoV":0.3,"big_corr":0.8,"big_psi":0.2}
+
+# Because there is no constraint on equal frequency binning, its iv value must be greater than or equal to the iv value of the optimal binning. So when the iv value of equal frequency binning is lower than the threshold specified by small_iv, these variables can be filtered out first. It does not participate in the subsequent optimal binning (because the iv value of the optimal binning must be less than the threshold). When there are many variables and many of them are less than the threshold specified by small_iv, you can enable this function to reduce the variables and thus reduce the number of optimal binning operations. Box time
+# Because equal-frequency binning usually produces more bins than optimal binning, the big_homogeneity of equal-frequency binning is smaller than the big_homogeneity of optimal binning. Therefore, when the big_homogeneity of equal-frequency binning is greater than the threshold, these variables can be filtered out first.
+# Missing values will not change due to equal frequency binning or optimal binning, so when the big_miss of equal frequency binning is greater than the threshold, these variables can be filtered out first
+# Only the above three filters support fore_filters
+# ex. fore_filters={"big_homogeneity":0.99,"small_iv":0.02}
+# None does not use pre-filter
+# Default: None
+fore_filters = None
+
+
+# Specify the dataset to be used for each filter. The specified dataset can be one or more. However, it is meaningless to configure only one dataset for big_ivCoV and big_psi.
+# big_corr does not need to specify a data set, because this indicator only uses the modeling data set, and a correlation coefficient that is too high will only affect the modeling process.
+# If big_psi is configured in filters and filter_data_names is not configured with big_psi, scf will automatically use all datasets under psi_data_file_path to calculate psi.
+# If filters[psi] is configured, but filter_data_names[big_psi] and psi_data_file_path are not configured, SCF will report an error.
+# ex. filter_data_names = {"big_homogeneity":"${DATA CONFIG:train_data_name},test","small_iv":"train,test","big_ivCoV":"train,test,psi_dat1,oot_dat2","big_psi":"psi_dat1,psi_dat2,train,test"}
+# None: When ${FILTER CONFIG:filters} is None, this configuration should also be set to empty.
+# Except big_corr, all other filters configured in ${FILTER CONFIG:filters} must be configured in filter_data_names
+# Default: None
+filter_data_names = None
+
+
+# Variables deleted by the user
+# x1, x2 or file://xx/xx.txt read from the file
+# None: No variable is specified for deletion
+# Default: None
+user_del = None
+
+
+# User reserved variables
+# x1, x2 or file://xx/xx.txt read from the file
+# None: No reserved variable is specified
+# Default: None
+user_save = None
+
+
+# User-settable variables
+# User settings are different from user reservations in that settings can only use variables set by the user, while reservations can use other variables in addition to reserved ones.
+# x1, x2 or file://xx/xx.txt read from the file
+# None: The user did not set the variable
+# Default: None
+user_set = None
+
+
+[MODEL CONFIG]
+# The column name of the modeling weight. This weight can be different from the sample weight because the two have different meanings. Generally speaking, the sample weight is mainly used to record the sampling ratio during the sampling process, so that the results reported by the model and the conversion scale of the scorecard are consistent with the actual data. The setting of modeling weights is based on various considerations, such as reducing heteroscedasticity, balancing positive and negative samples, and setting different loss costs.
+# None: Do not set modeling weight
+# Default: ${DATA CONFIG:sample_weight_col}
+fit_weight_col = ${DATA CONFIG:sample_weight_col}
+
+
+# In bidirectional stepwise regression, determine whether the model has improved indicators.
+# Classification indicators are:
+#aic, bic, roc_auc, ks, lift_n (under development), ks_price (under development)
+# Regression indicators are (regression indicators are only supported when using bidirectional stepwise regression alone, not when making scorecards):
+#r2, adj_r2 (under development)
+# cannot be None
+# Default: aic
+measure_index=aic
+
+
+# The name of the dataset used to evaluate the model
+# You can follow the dataset specified by ${DATA CONFIG:train_data_name}, or you can specify the name of another dataset, such as the name of a validation set.
+# If measure_index is aic or bic, measure_data_name configuration is ignored. Only ${DATA CONFIG:train_data_name} data can be used.
+# Default: ${DATA CONFIG:train_data_name}
+# cannot be None
+measure_data_name = ${DATA CONFIG:train_data_name}
+
+
+# The name of the sample weight column used when calculating the indicator corresponding to measure_index
+# This weight has a different meaning from the modeling weight, which is usually similar to the sample weight.
+# Can be followed by ${DATA CONFIG:sample_weight_col}, or can specify a column name or None.
+# None: No weight is set when measuring indicators
+# If measure_index is aic or bic, measure_weight_col configuration is ignored, which is equivalent to setting it to None.
+# Default: follow ${DATA CONFIG:sample_weight_col}
+measure_weight_col = ${DATA CONFIG:sample_weight_col}
+
+
+# Sort the events by probability of occurrence from large to small or small to large, and take the first N sample points from ${MODEL CONFIG:measure_data_name} as the evaluation index of the model
+# None: Take all sample points from ${MODEL CONFIG:measure_data_name} to calculate the model's evaluation index. Equivalent to measure_frac=1.
+# If measure_index is aic or bic, measure_frac configuration is ignored. Only all modeling data can be used
+# measure_frac > 1: Take the first N = measure_frac sample points from large to small
+# 0 <measure_frac <= 1: Take the first N = sample_n*measure_frac sample points from large to small (round down)
+# -1 <= measure_frac < 0: Take the first N = sample_n*measure_frac*-1 sample points from small to large (round down)
+# measure_frac < -1: Take the first N = measure_frac*-1 sample points from small to large
+# Default: None
+measure_frac = None
+
+
+# The p-value of the coefficient of all model variables (excluding the intercept term) must be less than or equal to the threshold
+# Variables that the user requires to be entered into the model are not subject to this restriction
+# If a non-mandatory variable is included in the model and causes the p-value of a mandatory variable whose p-value is originally less than the threshold to exceed the threshold, the non-mandatory variable will not be included in the model. However, if the p-value of a mandatory variable originally exceeds the threshold, that is, the p-value caused by other mandatory variables exceeds the threshold, it will not affect the introduction of the non-mandatory variable.
+# None: No constraints are imposed on the p-value of the model variable
+# Default: 0.05
+pvalue_max=0.05
+
+
+# The vif of all model variables (excluding the intercept term) must be less than or equal to the threshold
+# Variables forced into the module are not affected by this constraint
+# If a non-mandatory variable is imported and causes the vif of a mandatory variable whose vif is originally less than the threshold to exceed the threshold, the non-mandatory variable will not be imported. However, if the vif of a mandatory variable itself exceeds the threshold, that is, the vif caused by other mandatory variables exceeds the threshold, it will not affect the introduction of the non-mandatory variable.
+# None: No restrictions on the vif of the input variable
+# Default: 3
+vif_max=3
+
+
+# The correlation coefficients between all input variables must be less than or equal to the threshold
+# If the correlation coefficient of a non-mandatory variable with a mandatory variable exceeds the threshold, the non-mandatory variable will not be introduced into the model.
+# Even if the correlation coefficient of two forced variables is higher than this threshold, both variables will be introduced
+# None: No restriction on the correlation coefficient of the model variables
+# Default: 0.6
+corr_max=0.6
+
+
+# Sign constraints on variable coefficients
+# ex. {"x1":"+","x2":"-"} or file://xx/xx.json read from the file
+# Value Description:
+# + The coefficient of this variable is positive
+# - The coefficient of this variable has a negative sign
+# None This variable does not constrain the coefficient sign
+# coef_sign = None: No constraints are placed on the coefficient signs of all variables
+# Variables that the user forces to be entered into the model will not be subject to this constraint
+# If the introduction of a non-mandatory variable causes a mandatory variable that originally satisfied the symbol constraint to no longer satisfy the symbol constraint, the non-mandatory variable cannot be included in the module. If the symbol of the mandatory variable itself does not satisfy the constraint, the introduction of the non-mandatory variable will not be affected.
+# Default: None
+coef_sign = None
+
+
+# When a variable is not in coef_sign, the default value of the variable sign constraint
+# Value Description:
+# + The coefficient of this variable is positive, do not write it as '+'
+# - The coefficient of this variable is a negative sign, do not write it as '-'
+# None: The default value of all variables is None
+# Default: None
+default_coef_sign = None
+
+
+# Maximum number of iterations
+# Each iteration will have two operations:
+# 1. Find a variable from all remaining variables that meets the constraints and whose addition will improve the model index by the highest level. Introduce this variable into the model
+# 2. Find a variable from all the variables that meet the constraints and whose removal will improve the model index by the highest level. Remove this variable from the model.
+# If in round N (N < iter_num), adding or removing variables cannot further improve the performance of the model, the iteration terminates early
+# Default: 20
+iter_num=20
+
+
+[CARD CONFIG]
+# Settings related to scorecard conversion scale
+# The default values are 500, 0.05, and 50 respectively
+base_points=500
+base_event_rate=0.05
+pdo=50
+
+
+[REPORT CONFIG]
+# ScoreConflow will output the target distribution of all data sets containing targets to the model report "Sample Y Statistics"
+# If you need to group and count the distribution of the target by certain fields, list the grouping fields here, and separate multiple fields with commas.
+# ex:g
+# ex：g1,g2
+# None: No need to group targets
+# Default: None
+y_stat_group_cols = None
+
+
+# Group the output scores by equal frequency, and then count the details of the events that occurred and did not occur in each group (including quantity, proportion, accumulation, event incidence, ODDS, LIFT, etc.) and output them to the "Model Performance" sheet of the model report.
+# The performance of the model on each dataset containing the target will be output to the model report.
+# Use the scores output by the dataset specified by score_interval_cut_by to calculate the equal-frequency segmentation nodes.
+# None: Calculate the equal-frequency segmentation nodes based on the scores output by each data set.
+# Whether to use the same dataset or separate datasets to calculate the equal-frequency segmentation nodes depends on the user's focus and business. Using the same dataset (usually train) not only reflects the model performance, but also reflects the stability of the data and the difference in the model's scores on different datasets. If separate datasets are used to calculate the equal-frequency segmentation nodes, it can reflect the model's more realistic performance on each piece of data (usually higher than using the same dataset).
+# For example, if the model is used to sort services (e.g., sorting scores and then passing a certain application according to a certain ratio), if the user uses the same threshold for all service applications, consider using the same data set to calculate the split node. If the user customizes different thresholds for different service applications, consider using their respective data sets to calculate the split node.
+# Using the same or different data sets to calculate split nodes requires users to make comprehensive judgments based on their own business application scenarios.
+# Default: None
+score_interval_cut_by=None
+
+
+# The number of groups into which the scores are equally divided. When the model scores are concentrated, the final number of groups may be less than the specified value.
+# Model report is statistically analyzed by segmented groups (including quantity, proportion, accumulation, event rate, ODDS, LIFT, etc.)
+# Default: 20
+score_interval_cnt = 20
+
+
+# Same meaning as score_interval_cnt, but more detailed than score_interval_cnt. Some businesses may not need to pay attention to the overall ranking, but only need to pay attention to the recognition efficiency (such as recall rate, precision rate, etc.) of the small part with the highest (or lowest) event rate. You can configure fine_score_interval_cnt to display two model indicator statistics in the report, a wider model indicator statistics table containing score_interval_cnt groups, and a narrower model indicator statistics table containing fine_score_interval_cnt groups.
+# None: Do not show narrower groups in the report
+# Default: None
+fine_score_interval_cnt = None
+
+
+# The larger the fine_score_interval_cnt is, the more groups there are, and the longer the output to the report will be. Therefore, fine_head can be used to control the number of groups output to the report.
+# None: Display all
+# Default: None
+# When fine_score_interval_cnt is None, this value will be ignored.
+fine_head = None
+
+
+# Display LIFT indicators in the model report
+# ex: 1,5,10 means lift1, lift5, lift10 are listed in the model report respectively
+# None: Do not list the lift metric in the report
+# Default: None
+show_lift = None
+
+
+# Additional information such as variable descriptions and comments is written to this file. ScoreConflow will integrate this additional variable information into the model report for easy viewing.
+# None: Only the variable name is displayed in the report, without other additional information.
+# Default: None
+var_describe_file_path = None
+
+
+# Tell the model report the relationship between the score and the event rate, so that the report can be presented in a humanized way
+# True: The higher the probability of an event, the lower the score
+# False: The higher the probability of an event, the higher the score
+# Default: True
+score_reverse = True
