@@ -57,9 +57,9 @@ After a short wait, you can get a professional scorecard model development repor
 
 #### Comparison with OptBinning's binning IV
 OptBinning is the most downloaded scorecard development tool to date. Some people have compared the IV values of OptBinning binning with those of ScoreConflow binning.
+![OptBinning vs. ScoreConflow binning IV comparison](IV_OPT_SCF.png)  
 For the detailed comparison process, please click on the title to view the original text
 [OptBinning and ScoreConflow binning IV comparison](https://zhuanlan.zhihu.com/p/713158084)  
-![OptBinning vs. ScoreConflow binning IV comparison](IV_OPT_SCF.png)
 
 #### Introduction to AI instruction set
 There are 63 instruction sets in total to help users complete the development of complex scorecards, among which the model name and training dataset location must be set.
