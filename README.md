@@ -4,7 +4,7 @@ version:20240803
 WeChat consultation  
 ![WeChat consultation](wechat_scf.png)
 
-[Welcome to download and use ScoreConflow_20240803](https://gitee.com/ScoreConflow/scf_20240803/blob/master/ScoreConflow_20240803.zip)
+[Welcome to download and use ScoreConflow_20240803](20240803.zip)
 
 #### Product Introduction
 
