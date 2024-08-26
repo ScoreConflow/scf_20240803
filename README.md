@@ -2,9 +2,11 @@
 version:20240803
 
 WeChat consultation  
-![WeChat consultation](wechat_scf.png)
-
-[Welcome to download and use ScoreConflow_20240803](ScoreConflow_20240803.zip)
+![WeChat consultation](wechat_scf.png)  
+联系邮箱：scoreconflow@foxmail.com  
+联系邮箱：scoreconflow@gmail.com  
+[Welcome to download and use ScoreConflow_20240803](ScoreConflow_20240803.zip)  
+[中文 website](https://gitee.com/ScoreConflow/scf_20240803)
 
 #### Product Introduction
 
