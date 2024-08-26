@@ -6,7 +6,7 @@ WeChat consultation
 联系邮箱：scoreconflow@foxmail.com  
 联系邮箱：scoreconflow@gmail.com  
 [Welcome to download and use ScoreConflow_20240803](ScoreConflow_20240803.zip)  
-[中文 website](https://gitee.com/ScoreConflow/scf_20240803)
+[中文版访问 https://gitee.com/ScoreConflow/scf_20240803](https://gitee.com/ScoreConflow/scf_20240803)
 
 #### Product Introduction
 
