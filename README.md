@@ -9,7 +9,6 @@ WeChat consultation
 [中文版访问 https://gitee.com/ScoreConflow/scf_20240803](https://gitee.com/ScoreConflow/scf_20240803)
 
 #### Product Introduction
-
 An AI-generated scorecard model. Version 20240803 of ScoreConflow.
 ScoreConflow is composed of three words: ScoreCard Configuration Flow.
 As each word means, ScoreConflow uses text to allow users to configure all business-related AI interaction instructions at one time, and automatically converts user instructions into code to generate a scorecard.
@@ -17,7 +16,6 @@ Its concept is that business is model and data is model. Users only need to set 
 While it is running, users do not need to be on duty. After ScoreConflow is finished, they can get professional-level models and reports, saving users the trouble of writing reports.
 
 #### Product Highlights
-
 1. Users do not need to write program code, they can achieve 100% customization of complex business through text interaction. The purpose of this product is not to provide a black box fool-style scorecard production product, but to provide users with a modeling tool that can improve work efficiency and improve model accuracy compared to existing products, so that users can focus on business and data.
 2. The binning algorithm built into SCF is truly optimal binning. The optimal binning of other products refers to chi-square binning, tree binning and other methods that are different from equal frequency binning. The optimal binning of SCF is a mathematically provable global optimal analytical solution. The segmentation it gives can maximize IV, and it can be mathematically proven to be the upper limit of all binning methods. Under the conditions of the number of bins, percentage threshold and minimum gain specified by the user, it is still possible to calculate the binning node that meets the highest IV set by the user.
 3. When binning, you can specify the binning shape, that is, specify whether the binning is monotonically increasing, monotonically decreasing, U-shaped, or inverted U-shaped. When the shape is specified, the optimal binning of SCF is still a mathematically provable global optimal analytical solution, and is the binning method with the highest IV under the same conditions.
@@ -30,7 +28,6 @@ While it is running, users do not need to be on duty. After ScoreConflow is fini
 Note: This product has many advantages, and the author has been using it to complete modeling work. The author can improve work efficiency by 4 times, and the output model results are better. The product supports a lot of functions, and users can only experience its convenience, efficiency and accuracy by using it in person.
 
 #### Who needs to use it
-
 If you are suffering from the following problems:
 1. Each time you develop a scorecard, you have to maintain a large amount of repetitive code or operate complex graphical configurations.
 2. You don’t want to write a single line of code, but need to process complex data logic.
@@ -43,7 +40,6 @@ If you are suffering from the following problems:
 9. Users who spend too much time on work.
         
 Then you should try ScoreConflow. Users only need to tell SCF the data and business requirements used for modeling through text, and it will automatically generate the optimal scorecard model, that is, the one with the highest bin IV and the highest model index.
-
 
 #### Example
 Through a simple example, we can feel how convenient ScoreConflow is to use.
@@ -91,17 +87,14 @@ aic, bic, roc_auc, ks, lift_n (under development), ks_price (under development)
 For the full set of instructions and detailed explanation, see conf.txt
     
 #### Installation Tutorial
-
 Download ScoreConflow_20240803.zip, unzip it and open "Docs\xx\03_Installation Method.docx" to view it.
 xx is your country code
 
 #### Instructions
-
 Download ScoreConflow_20240803.zip, unzip it and open "Docs\xx\05_Instructions.docx" to view it.
 xx is your country code
 
 #### API
-    
 The API is mainly for advanced users. If you do not need to use ScoreConflow to generate models directly, but need to use the powerful functions of the built-in components in ScoreConflow, you can read the API to get the usage of the built-in components.
 Since ScoreConflow is designed to be pluggable, advanced users can use these built-in component modules separately like any Python module.
 Download ScoreConflow_20240803.zip, unzip it and open "Docs\xx\06_API.docx" to view it.
@@ -110,7 +103,6 @@ xx is your country code
 
 #### Introduction to main modules
 ##### 1.CardFlow
-
 Implement a set of fixed processes (see Competitive Product Comparison - Built-in Fixed Workflow). It divides the scorecard development process into 10 stages:
 Data reading, equal frequency binning, feature pre-screening, monotonic and U-shaped recommendations, optimal binning, WOE conversion, feature screening, model building, scorecard creation, and report generation.
 The results will be automatically saved after each stage is completed. You can resume or update the previous results from any stage, and the results of the steps that have been calculated will not be lost when the computer is restarted.
@@ -120,7 +112,6 @@ Just use cardflow.start(start_step=7,end_step=10). The previous results do not n
 For most users, once the configuration file is configured, CardFlow is the only component you need to interact with.
 The interaction method is very simple: cardflow.start(start_step=a,end_step=b)
 ##### 2.Bins
-
 Calculate the optimal split point for binning. The optimal split point calculated by Bins is a global optimal analytical solution with mathematical proof.
 For categorical variables, including ordered and unordered categories, the global optimal analytical solution with mathematical proof can also be calculated.
 Its main functions are:
@@ -133,7 +124,6 @@ Its main functions are:
 7. Support binning of weighted samples.
 In most cases, users do not need to interact directly with Bins components. Since ScoreConflow is designed to be pluggable, advanced users can use Bins modules separately like any python module.
 ##### 3.Reg_Step_Wise_MP
-
 It is a linear two-way stepwise regression and logistic two-way stepwise regression implemented in Python, which adds the following features compared to traditional two-way stepwise regression:
 1. When performing stepwise variable selection for logistic regression, AUC, KS, and LIFT indicators can be used instead of AIC and BIC indicators. For some businesses, AUC and KS are indicators that are more suitable for business scenarios. For example, in the sorting business, the model built using the KS indicator has the advantage of using fewer variables but the KS of the model does not decrease on multiple test sets according to past experience.
 2. When performing stepwise variable selection, use other data sets to calculate model evaluation indicators instead of using the modeling data set. Especially when the amount of data is large and there is a validation set in addition to the training set and test set, it is recommended to use the validation set to calculate evaluation indicators to guide variable selection. This helps reduce overfitting.
@@ -144,7 +134,6 @@ It is a linear two-way stepwise regression and logistic two-way stepwise regress
 7. When the number of configured CPU cores is greater than 1, multi-process parallel computing stepwise regression is automatically started.
 In most cases, users do not need to interact directly with the Reg_Step_Wise_MP component. However, because ScoreConflow is a pluggable component, advanced users can use the Reg_Step_Wise_MP module separately like any other python module.
 ##### 4. Cutter
-
 Perform equal frequency segmentation or segmentation according to specified split points, which has the following enhancements over the built-in segmenter in Python:
 1. Mathematically provable analytical solution with minimum global error.
 2. All split points come from the original values.
@@ -157,20 +146,12 @@ Perform equal frequency segmentation or segmentation according to specified spli
 It is recommended to try to replace Python's built-in equal frequency segmentation component with Cutter.
 
 ##### 5.Filter
-
 1. Six built-in filters: single value ratio filter, IV filter, IV variation filter, correlation coefficient filter, PSI filter, missing value filter.
 2. The results and intermediate data will be saved in Excel and integrated in the model report.
 3. Supports user-defined filters. Users only need to implement the filtering method. ScoreConflow will automatically integrate the results and intermediate data into the model report according to the interface specifications.
 4. Single value proportion filter, IV filter, and missing value filter support pre-filtering.
 5. Support users to specify the data sets involved in filter calculation.
 6. Users can specify variables to delete or retain.
-
-#### Recruitment Plan
-ScoreConflow hopes to create the world's easiest-to-use, most comprehensive, and most effective scoring card model algorithm. This goal requires the participation of insightful people.
-If you have a good idea that can enhance ScoreConflow and can realize it, in order to thank you for your contribution, the ScoreConflow organization will reward you with N% of the sales amount for each copy sold. The size of N is determined by the practicality of the idea and the difficulty of implementation.
-If the algorithm you contributed needs to be protected, ScoreConflow has a complete set of self-developed algorithm protection systems to protect your rights.
-
-In addition, if you can share your experience and skills in using ScoreConflow on the Internet, the ScoreConflow organization will refund the fees you paid that year.
 
 #### WeChat consultation
 WeChat ID: SCF_04
